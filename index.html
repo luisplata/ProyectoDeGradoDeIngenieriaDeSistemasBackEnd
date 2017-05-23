@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+</style>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+  <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" >
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" ></script>
+<meta http-equiv="Access-Control-Allow-Origin" content="*"/>
+<script src="https://cdn.jsdelivr.net/g/sweetalert2@6.6.2(sweetalert2.min.js+sweetalert2.js)"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/g/sweetalert2@6.6.2(sweetalert2.min.css+sweetalert2.css)">
+</head>
+<body>
+      <canvas width="615" height="615" id="lienzo"></canvas>
+      <input type="button" class="btn btn-primary btn-lg" name="exportar" id="exportar" value="Analizar Laberinto" onclick="guardarImagen()" data-toggle="modal" target="#myModal">
+
+      <div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+
+    <div class="panel panel-primary">
+         <div class="panel-heading">
+        <h4>Procesando</h4>
+      </div>
+      <div class="panel-body">
+        <p>por favor espere mientras se realiza el analisis.</p>
+      </div>
+      <div class="panel-footer" style="height:100%">
+        <div class="progress">
+            <div id="imagen" class="progress-bar progress-bar-success progress-bar-striped active" style="width: 0%">
+              0%
+            </div>
+      
+          </div>
+                <div id="resultado"></div>
+      </div>  
+    </div>
+     
+
+
+  </div>
+</div>
+<script>
+var cv, cx, objetos, objetoActual = null;
+var inicioX = 0, inicioY =0;
+var sizeLienzo=(1536/2.5);
+var clickParaSalir=false;
+function aumentarPorcentaje(selector, porcentaje){
+$("#"+selector).css('width',porcentaje+'%').html(porcentaje+'%')
+
+}
+function restaurarPorcentajes(){
+
+  aumentarPorcentaje("imagen","0");
+
+}
+ function actualizar (){
+        cx.fillStyle="#fff";
+        cx.fillRect(0,0,sizeLienzo,sizeLienzo);
+  
+      var imagen = new Image();
+      imagen.src = "Imagenes/fondo.png";
+      imagen.onload = function(){
+        cx.drawImage(imagen, 0, 0,1536,1536,0,0,sizeLienzo,sizeLienzo);
+      }
+    
+      for (var i = 0; i < objetos.length; i++){
+        cx.fillStyle=objetos[i].color;
+        cx.fillRect(objetos[i].x,objetos[i].y, objetos[i].width, objetos[i].height);
+          
+        }
+    }
+
+window.onload = function(){
+    objetos = [];
+    size=(sizeLienzo/8);
+    cv = document.getElementById('lienzo');
+    cx = cv.getContext('2d');
+
+
+
+      esquemaBase();
+
+     actualizar();
+
+
+   
+     
+     
+     cv.onmousedown = function(event){
+
+      for (var i = 0; i < objetos.length; i++){
+        if(objetos[i].x < event.clientX 
+        && (objetos[i].width + objetos[i].x > event.clientX)
+        && objetos[i].y < event.clientY 
+        && (objetos[i].height + objetos[i].y > event.clientY)){
+        objetoActual = objetos[i];
+        inicioY = event.clientY - objetos[i].y;
+        inicioX = event.clientX - objetos[i].x;
+
+        break;
+        }
+      }
+  
+     };
+     cv.onmousemove = function(event){
+       if(objetoActual != null){
+        objetoActual.x = event.clientX - inicioX;
+        objetoActual.y = event.clientY - inicioY;
+       
+        actualizar();
+       }
+     };
+     cv.onmouseup = function(event){
+      for (var x = 1; x <= 8; x++){
+        for (var y = 1; y <= 8; y++){
+            if(objetoActual.x<(size*(x)) 
+              && objetoActual.x>(size*(x-1))
+              && objetoActual.y<(size*(y)) 
+              && objetoActual.y>(size*(y-1)))  
+              {
+
+              objetoActual.x = ((sizeLienzo/8)*(x-1));
+              objetoActual.y = ((sizeLienzo/8)*(y-1));
+              break;
+            } 
+            if (objetoActual.x<0 
+              //|| (objetoActual.x+size)>sizeLienzo 
+              || objetoActual.y<0 
+              //|| (objetoActual.y+size)>sizeLienzo
+              ) {
+
+                objetoActual.x = (size*4);
+                objetoActual.y = (size*4);
+                break;
+
+            }
+        }
+        
+      }
+        
+        actualizar();
+      objetoActual = null;
+      inicioX = 0;
+      inicioY =0;
+
+     }
+     function esquemaBase(){
+         //Agregar ojetos de prueba
+    //Azul=Final
+    objetos.push({
+     x: ((sizeLienzo/8)*7), y: 0,
+     width: size, height: size,
+     color:'#f00'
+     });
+
+    //Rojo= Inicial
+     objetos.push({
+     x: 0, y: 0,
+     width: size, height: size,
+     color:'#0f0'
+     });
+
+     //Negro= Barrera
+     barrera(3,1);
+     barrera(6,1);
+
+     barrera(2,2);
+     barrera(3,2);
+     barrera(5,2);
+     barrera(6,2);
+     barrera(8,2);
+
+     barrera(5,3);
+     barrera(8,3);
+
+     barrera(1,4);
+     barrera(3,4);
+     barrera(7,4);
+
+     barrera(4,5);
+     barrera(7,5);
+     barrera(8,5);
+
+     barrera(2,6);
+     barrera(5,6);
+     barrera(7,6);
+
+     barrera(2,7);
+     barrera(3,7);
+     barrera(4,7);
+
+     barrera(6,8);
+     barrera(8,8);
+  
+
+
+
+     }
+
+     function barrera(x,y){
+        objetos.push({
+          x: ((sizeLienzo/8)*(x-1)), y: ((sizeLienzo/8)*(y-1)),
+          width: size, height: size,
+          color:'#000'
+        });    
+
+     }
+      
+
+};
+function guardarImagen() {
+
+  $("#myModal").modal("show");
+    var canvas = document.getElementById("lienzo");  
+                        $("#resultado").append("<br/>Guardando Imagen en el Servidor...");
+
+               setTimeout(function(){
+                     aumentarPorcentaje("imagen","10");
+                    }, 400);
+          var dataUrl = canvas.toDataURL(); // obtenemos la imagen como png
+                    setTimeout(function(){
+                         $.ajax({
+                    url: 'core/Analizador.php?r=1',  
+                    data:{ 
+                        img: dataUrl
+                    },                     
+                    type: 'POST'
+                }).done(function(data){
+                  setTimeout(function(){
+                   aumentarPorcentaje("imagen","30");
+                   $("#resultado").append("<br/>Imagen Guardada.");
+                   setTimeout(function(){
+                      $("#resultado").append("<br/>Analizando el laberinto...");
+                    }, 700);
+                        }, 400);
+
+                   
+                    $.ajax({
+                        url: 'core/Analizador.php?r=2',         
+                        type: 'POST'
+                    }).done(function(data){
+                      var mensaje="";
+                      var tipo="";
+                      var titulo="";
+                   
+                      switch(data){
+                        case "1":
+                          titulo="Poceso terminado";
+                          mensaje="El laberinto ha sido solucionado, a partir de este momento puede observar la soluci&oacute;n por medio de la simulaci&oacute;n.";
+                          tipo="success";
+                        break;
+                        case "5":
+                         titulo="Oops...";
+                          mensaje="El laberinto dise&nacute;ado no tiene una posible soluci&oacute;n.";
+                          tipo="error";
+                        break;
+                        case "6":
+                          titulo="Oops...";
+                          mensaje="La casilla de inicio no tiene camino para salir.";
+                          tipo="error";
+                        break;
+                        default:
+                          titulo="Oops...";
+                          mensaje="Error desconocido.";
+                          tipo="error";
+                        break;
+                      }
+                  
+                      aumentarPorcentaje("imagen","60");
+                       setTimeout(function(){
+                         aumentarPorcentaje("imagen","100");
+                          $("#resultado").append("<br/>Laberinto Analizado"+mensaje);
+                         $("#resultado").append("<br/>A partir de este momento el robot andante puede realizar la solicitud de la repsuesta");
+                          clickParaSalir=true;
+                              sweetAlert(titulo,mensaje, tipo);
+                        }, 800);
+                      
+                   
+                       
+                    }); 
+                });
+                    }, 500);
+             
+                       
+              
+
+     }
+$("#myModal").click(function(){
+  if(clickParaSalir){
+    $("#myModal").modal("hide");
+    $("#resultado").html("");
+      restaurarPorcentajes();
+      clickParaSalir=false;
+  }
+
+});
+$(document).ready(function(){
+  $('#myModal').modal({
+   backdrop: 'static',
+   keyboard: false,
+   show: false
+  });
+
+});
+
+</script>
+</body>
+</html>

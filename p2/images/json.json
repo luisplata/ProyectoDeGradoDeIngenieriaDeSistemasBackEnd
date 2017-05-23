@@ -1,0 +1,13 @@
+{
+  "imagen":"servidor.com/images/tablero.jpg",
+  "puntoEntrada":1,
+  "puntoSalida":8,
+  "secuencia":[
+    1,
+    2,
+    1,
+    2,
+    1,
+    2
+    ]
+}
